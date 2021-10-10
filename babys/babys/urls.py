@@ -1,7 +1,7 @@
 """babys URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/3.1/topics/http/urls/
+    https://docs.djangoproject.com/en/3.2/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -14,16 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, re_path, include
 from django.views.static import serve
 from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # 添加项目应用 index、commodity、和 shopper的 urls.py
+    # 添加项目应用 index、commodity 和 shopper 的 urls.py
     path('', include(('index.urls', 'index'), namespace='index')),
     path('commodity', include(('commodity.urls', 'commodity'), namespace='commodity')),
     path('shopper', include(('shopper.urls', 'shopper'), namespace='shopper')),
+
     # 配置媒体资源的路由信息
     re_path('media/(?P<path>.*)', serve, {'document_root':settings.MEDIA_ROOT}, name='media'),
 ]

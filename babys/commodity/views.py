@@ -1,29 +1,21 @@
 from django.shortcuts import render
+# from django.http import HttpResponse
+from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.paginator import EmptyPage
 from django.core.paginator import PageNotAnInteger
-from .models import *
-from django.http import JsonResponse
 from django.db.models import F
+from .models import *
 
 # Create your views here.
-from django.http import HttpResponse
-
-def detailView(request, id):
-    title = '商品介绍'
-    classContent = 'datails'
-    commoditys = CommodityInfos.objects.filter(id=id).first()
-    items = CommodityInfos.objects.exclude(id=id).order_by('-sold')[:5]
-    likesList = request.session.get('likes', [])
-    likes = True if id in likesList else False
-    return render(request, 'details.html', locals())
-
 def commodityView(request):
     title = '商品列表'
     classContent = 'commoditys'
-    # 根据模型Types生成商品分类列表
+
+    # 根据模型 Types 生成商品分类列表
     firsts = Types.objects.values('firsts').distinct()
     typesList = Types.objects.all()
+
     # 获取请求参数
     t = request.GET.get('t', '')
     s = request.GET.get('s', 'sold')
@@ -39,6 +31,7 @@ def commodityView(request):
         commodityInfos = commodityInfos.order_by('-' + s)
     if n:
         commodityInfos = commodityInfos.filter(name__contains=n)
+
     # 分页功能
     paginator = Paginator(commodityInfos, 6)
     try:
@@ -49,6 +42,20 @@ def commodityView(request):
         pages = paginator.page(paginator.num_pages)
 
     return render(request, 'commodity.html', locals())
+
+    # return HttpResponse('Hello world')
+
+
+def detailView(request, id):
+    title = '商品介绍'
+    classContent = 'datails'
+    commoditys = CommodityInfos.objects.filter(id=id).first()
+    items = CommodityInfos.objects.exclude(id=id).order_by('-sold')[:5]
+    likesList = request.session.get('likes', [])
+    likes = True if id in likesList else False
+    return render(request, 'details.html', locals())
+
+    # return HttpResponse('Hello world')
 
 
 def collectView(request):

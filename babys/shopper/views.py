@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import *
-from commodity.models import *
+from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.core.paginator import EmptyPage
@@ -9,34 +8,77 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import reverse
-from .form import *
-# from .pays_new import get_pay
-import time
+from .form import LoginForm
+from .models import CartInfos, OrderInfos
+from commodity.models import CommodityInfos
 
 # Create your views here.
-from django.http import HttpResponse
 
+# def loginView(request):
+#     title = '用户登录'
+#     classContent = 'logins'
+#     if request.method == 'POST':
+#         infos = LoginForm(data=request.POST)
+#         # 验证表单字段的数据是否正确
+#         if infos.is_valid():
+#             data = infos.cleaned_data
+#             # 获取请求参数 username 和 password
+#             username = data['username']
+#             password = data['password']
+#
+#             # 查询 username 的数据是否存在内置模型 User
+#             if User.objects.filter(username=username):
+#                 # 验证账号密码与模型 User 的账号密码是否一致
+#                 user = authenticate(username=username, password=password)
+#                 # 通过验证则使用内置函数 login 执行用户登录
+#                 # 登录成功后跳转到个人中心页
+#                 if user:
+#                     login(request, user)
+#                     return redirect(reverse('shopper:shopper'))
+#
+#             # username 的数据不存在内置模型 User
+#             else:
+#                 # 执行用户注册
+#                 state = '注册成功'
+#                 d = dict(username=username, password=password, is_staff=1, is_active=1)
+#                 user = User.objects.create_user(**d)
+#                 user.save()
+#
+#         else:
+#             # 获取错误信息，并以 JSON 格式输出
+#             error_msg = infos.errors.as_json()
+#             print(error_msg)
+#
+#     # 处理 HTTP 的 GET 的请求
+#     else:
+#         infos = LoginForm()
+#     return render(request, 'login.html', locals())
 
 def loginView(request):
     title = '用户登录'
     classContent = 'logins'
     if request.method == 'POST':
-        infos = LoginModelForm(data=request.POST)
-        data = infos.data
-        username = data['username']
-        password = data['password']
-        if User.objects.filter(username=username):
-            user = authenticate(username=username, password=password)
-            if user:
-                login(request, user)
-                return redirect(reverse('shopper:shopper'))
+        infos = LoginForm(data=request.POST)
+        if infos.is_valid():
+            data = infos.cleaned_data
+            username = data['username']
+            password = data['password']
+            if User.objects.filter(username=username):
+                user = authenticate(username=username, password=password)
+                if user:
+                    login(request, user)
+                    return redirect(reverse('shopper:shopper'))
+            else:
+                state = '注册成功'
+                d = dict(username=username, password=password, is_staff=1, is_active=1)
+                user = User.objects.create_user(**d)
+                user.save()
         else:
-            state = '注册成功'
-            d = dict(username=username, password=password, is_staff=1, is_active=1)
-            user = User.objects.create_user(**d)
-            user.save()
+            # 获取错误信息，并以JSON格式输出
+            error_msg = infos.errors.as_json()
+            print(error_msg)
     else:
-        infos = LoginModelForm()
+        infos = LoginForm()
     return render(request, 'login.html', locals())
 
 
@@ -46,7 +88,7 @@ def shopperView(request):
     classContent = 'informations'
     p = request.GET.get('p', 1)
     # 处理已支付的订单
-    t = request.GET.get('t', '')
+    t = request.GET.get('t', '')  # 代表用户购买商品的支付时间
     payTime = request.session.get('payTime', '')
     if t and payTime and t == payTime:
         payInfo = request.session.get('payInfo', '')
@@ -56,7 +98,7 @@ def shopperView(request):
     # 根据当前用户查询用户订单信息
     orderInfos = OrderInfos.objects.filter(user_id=request.user.id).order_by('-created')
     # 分页功能
-    paginator = Paginator(orderInfos, 7)
+    paginator = Paginator(orderInfos, 7)  # 每页设置7条订单信息
     try:
         pages = paginator.page(p)
     except PageNotAnInteger:
@@ -77,41 +119,37 @@ def logoutView(request):
 def shopcartView(request):
     title = '我的购物车'
     classContent = 'shopcarts'
+
+    # 获取请求参数
     id = request.GET.get('id', '')
     quantity = request.GET.get('quantity', 1)
     userID = request.user.id
+
+    # 存在请求参数id，则对模型 CartInfos 新增数据
     if id:
         CartInfos.objects.update_or_create(commodityInfos_id=id, user_id=userID, quantity=quantity)
         return redirect('shopper:shopcart')
+
+    # 查询当前用户的购物车信息
     getUserId = CartInfos.objects.filter(user_id=userID)
+
+    # 从当前用户的购物车信息获取商品id和购买属性
     commodityDcit = {x.commodityInfos_id: x.quantity for x in getUserId}
+
+    # 从商品 id 获取商品详细信息
     commodityInfos = CommodityInfos.objects.filter(id__in=commodityDcit.keys())
     return render(request, 'shopcart.html', locals())
 
 
-# def deleteAPI(request):
-#     result = {'state': 'success'}
-#     userId = request.GET.get('userId', '')
-#     commodityId = request.GET.get('commodityId', '')
-#     if userId:
-#         CartInfos.objects.filter(user_id=userId).delete()
-#     elif commodityId:
-#         CartInfos.objects.filter(commodityInfos_id=commodityId).delete()
-#     else:
-#         result = {'state': 'fail'}
-#     return JsonResponse(result)
-#
-#
-# def paysView(request):
-#     total = request.GET.get('total', 0)
-#     total = float(str(total).replace('￥', ''))
-#     if total:
-#         out_trade_no = str(int(time.time()))
-#         payInfo = dict(price=total, user_id=request.user.id, state='已支付')
-#         request.session['payInfo'] = payInfo
-#         request.session['payTime'] = out_trade_no
-#         return_url = 'http://' + request.get_host() + '/shopper.html'
-#         url = get_pay(out_trade_no, total, return_url)
-#         return redirect(url)
-#     else:
-#         return redirect('shopper:shopcart')
+def deleteAPI(request):
+    result = {'state': 'success'}
+    userId = request.GET.get('userId', '')
+    commodityId = request.GET.get('commodityId', '')
+    if userId:
+        CartInfos.objects.filter(user_id=userId).delete()
+    elif commodityId:
+        CartInfos.objects.filter(commodityInfos_id=commodityId).delete()
+    else:
+        result = {'state': 'fail'}
+
+    return JsonResponse(result)

@@ -13,8 +13,8 @@ STATE = (
 class CartInfos(models.Model):
     id = models.AutoField(primary_key=True)
     quantity = models.IntegerField('购买数量')
-    commodityInfo_id = models.IntegerField('商品ID')
-    user_id = models.IntegerField('用户ID')
+    commodityInfos_id = models.IntegerField('商品ID')
+    user_id = models.IntegerField('用户 ID')
 
     def __str__(self):
         return str(self.id)
@@ -26,9 +26,9 @@ class CartInfos(models.Model):
 
 class OrderInfos(models.Model):
     id = models.AutoField(primary_key=True)
-    price = models.FloatField('订单价格')
+    price = models.FloatField('订单总价')
     created = models.DateField('创建时间', auto_now_add=True)
-    user_id = models.IntegerField('用户ID')
+    user_id = models.IntegerField('用户 ID')
     state = models.CharField('订单状态', max_length=20, choices=STATE)
 
     def __str__(self):

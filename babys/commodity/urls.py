@@ -1,8 +1,8 @@
-# _*_coding:utf-8_*_
-# 作者    : tanzikun
-# 创建时间 : 2021/5/26 15:27
-# 文件    : urls.py
-# IDE    : PyCharm
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# author： chrixtan
+# datetime： 2021/8/19 16:08 
+# ide： PyCharm
 
 from django.urls import path
 from .views import *

@@ -1,12 +1,11 @@
 from django.db import models
 
-
 # Create your models here.
 
 class Types(models.Model):
     id = models.AutoField(primary_key=True)
     firsts = models.CharField('一级类型', max_length=100)
-    seconds = models.CharField('耳机类型', max_length=100)
+    seconds = models.CharField('二级类型', max_length=100)
 
     def __str__(self):
         return str(self.id)
@@ -18,9 +17,9 @@ class Types(models.Model):
 
 class CommodityInfos(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField('商品信息', max_length=100)
-    sezes = models.CharField('颜色规格', max_length=100)
-    types = models.CharField('颜色类型', max_length=100)
+    name = models.CharField('商品名称', max_length=100)
+    sezes = models.CharField('商品规则', max_length=100)
+    types = models.CharField('商品类型', max_length=100)
     price = models.FloatField('商品价格')
     discount = models.FloatField('折后价格')
     stock = models.IntegerField('存货数量')
